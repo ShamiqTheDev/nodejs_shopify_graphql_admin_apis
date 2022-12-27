@@ -1,9 +1,13 @@
+require('dotenv').config();
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 
+
+const PORT = process.env.PORT;
 const app = express();
 
 // defining an array, default response
@@ -41,7 +45,6 @@ app.post('/upload-pricelist', (req, res) => {
 
 
 // starting the server
-const PORT = 3001;
 app.listen(PORT, () => {
 console.log(`listening on PORT ${PORT}`);
 });
