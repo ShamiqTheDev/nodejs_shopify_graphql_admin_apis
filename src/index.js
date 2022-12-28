@@ -1,50 +1,88 @@
-require('dotenv').config();
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
+const app = require('../server.js');
+const readXlsxFile = require('read-excel-file/node')
 
 
-const PORT = process.env.PORT;
-const app = express();
+const multer  = require('multer');
+const upload = multer({ dest: './uploads/PriceLists/' });
 
-// defining an array, default response
-const deafult = [
-    {
-        code: 200,
-        data: {
-            msg: "All the APIs are up and running"
-        }
-    }
-];
-
-// adding Helmet to enhance our API's security
-app.use(helmet());
-
-// using bodyParser to parse JSON bodies into JS objects
-app.use(bodyParser.json());
-
-// enabling CORS for all requests
-app.use(cors());
-
-// adding morgan to log HTTP requests
-app.use(morgan('combined'));
+const PriceListGIDPrefix = process.env.SHOPIFY_PRICELIST_GID_PREFIX;
+const ProductVariantGIDPrefix = process.env.SHOPIFY_PRODUCT_VARIANT_GID_PREFIX;
 
 
-app.get('/', (req, res) => {
-    res.send(deafult);
-});
+app.post('/upload-pricelist', upload.single('price_list_file'), (req, res) => {
+    // console.log(req.file.path);
+    // console.log('pricelist_id', req.body.price_list_id);
 
-app.post('/upload-pricelist', (req, res) => {
-    res.send({
-        msg: 'my custom response'
+    let priceListID = req.body.price_list_id;
+    let priceListGID = ProductVariantGIDPrefix + priceListID;
+
+    let pricesArr = [];
+    readXlsxFile(req.file.path).then( async (rows) => {
+        rows.shift();// to remove headings in excel
+
+        rows.map( (col, index) => {
+            // console.log(`the colmn: ${index}`, col[0]);
+
+            let country         = col[0]; //Country
+            let variantID       = col[1]; //Variant Id
+            let price           = col[2]; //Price
+            let compareAtPrice  = col[3]; //Compare At
+            let currencyCode    = col[4]; // Currency
+            let variantGID      = ProductVariantGIDPrefix + variantID;
+
+            let priceObj = {
+                "compareAtPrice": {
+                  "amount": compareAtPrice,
+                  "currencyCode": currencyCode
+                },
+                "price": {
+                  "amount": price,
+                  "currencyCode": currencyCode
+                },
+                "variantId": variantGID
+            }
+            pricesArr.push(priceObj);
+
+            // console.log(pricesArr);
+
+        });
+        console.log(pricesArr);
+
+        const client = new shopify.clients.Graphql({session});
+        const data = await client.query({
+            data: {
+                "query": `mutation priceListFixedPricesAdd($priceListId: ID!, $prices: [PriceListPriceInput!]!) {
+                priceListFixedPricesAdd(priceListId: $priceListId, prices: $prices) {
+                    prices {
+                    compareAtPrice {
+                        amount
+                        currencyCode
+                    }
+                    price {
+                        amount
+                        currencyCode
+                    }
+                    }
+                    userErrors {
+                    field
+                    code
+                    message
+                    }
+                }
+                }`,
+                "variables": {
+                    "priceListId": priceListGID,
+                    "prices": pricesArr
+                },
+            }
+        });
+
+        res.send({
+            code: 200,
+            data: pricesArr
+        });
+
     });
 });
 
 
-// starting the server
-app.listen(PORT, () => {
-console.log(`listening on PORT ${PORT}`);
-});
