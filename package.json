@@ -4,8 +4,8 @@
   "description": "This package was created to solve a problem caused by a third-party payment services and orders processor application, which taken over to the Markets feature of Shopify Plus, hence for their unsupported countries we need access to Shopify Plus's markets feature, which is now managed by third-party payment processor, then in this case we needed to develop our system to import price lists for various markets. ",
   "main": "index.js",
   "scripts": {
-    "serve": "node ./src/index.js",
-    "start": "nodemon ./src/index.js"
+    "serve": "node ./src/router.js",
+    "start": "nodemon ./src/router.js"
   },
   "repository": {
     "type": "git",

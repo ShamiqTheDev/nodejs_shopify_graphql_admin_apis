@@ -5,11 +5,12 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const shopify = require('@shopify/shopify-api');
 
 // DEFINING CONSTANTS
 const PORT = process.env.API_PORT;
 
-
+// initiating express server
 const app = express();
 
 // adding Helmet to enhance our API's security
@@ -29,21 +30,13 @@ app.listen(PORT, () => {
     console.log(`listening on PORT ${PORT}`);
 });
 
-module.exports = app;
+app.use( express.json() );
 
 
-// defining an array, default response
-const deafult = [
-    {
-        code: 200,
-        data: {
-            msg: "All the APIs are up and running"
-        }
-    }
-];
-
-app.get('/', (req, res) => {
-    res.send(deafult);
-});
+// expoting file modules
+module.exports = {
+    app,
+    shopify
+};
 
 
