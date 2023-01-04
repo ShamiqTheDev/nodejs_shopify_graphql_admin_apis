@@ -26,9 +26,20 @@ app.use(cors());
 // adding morgan to log HTTP requests
 app.use(morgan('combined'));
 
+// Default response no auth
+app.get('/', (req, res) => {
+    res.send([
+        {
+            code: 200,
+            data: {
+                msg: "The APIs are up and running"
+            }
+        }
+    ]);
+});
+
 // authentication layer
 app.use(function (req, res, next) {
-    // console.log(req.headers);
 
     const secretKey = req.headers['secret_key'];
     const publicKey = req.headers['public_key'];

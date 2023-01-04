@@ -105,3 +105,6 @@ dist
 
 # Upload folders
 uploads/*
+
+# htaccess to ignore for git
+.htaccess
