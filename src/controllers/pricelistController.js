@@ -1,22 +1,28 @@
-const express = require('express');
+const express   = require('express');
 
 let router      = express.Router();
 let request     = require('request');
+let logger      = require('../logger');
 
+// Init logger
+const log       = logger({ subFolder:'pricelist-upload', filePrefix:'plu' });
 
 // Module's constants
 const PriceListGIDPrefix = process.env.SHOPIFY_PRICELIST_GID_PREFIX;
 const ProductVariantGIDPrefix = process.env.SHOPIFY_PRODUCT_VARIANT_GID_PREFIX;
 
-// File Uploading
-const readXlsxFile = require('read-excel-file/node');
+
+
+// Enabling fileupload
 const multer = require('multer');
 const upload = multer({ dest: './uploads/PriceLists/' });
 
+// Read uploaded file
+const readXlsxFile = require('read-excel-file/node');
+
 router.route('/upload')
-    .post(upload.single('price_list_file'), (req, res) => {
-        // console.log(req.file.path);
-        // console.log('pricelist_id', req.body.price_list_id);
+  .post(upload.single('price_list_file'), (req, res) => {
+    try {
 
         let priceListID = req.body.price_list_id;
         let priceListGID = PriceListGIDPrefix + priceListID;
@@ -28,17 +34,14 @@ router.route('/upload')
             let itemsCounter = 0;
             let shopifyLimit = 250;
 
-            // var responses = [];
             rows.map((col, index) => {
-
                 // let country         = col[0]; //Country
                 let variantID           = col[1]; // Variant Id
                 let price               = col[2]; // Price
                 let compareAtPrice      = col[3]; // Compare At
                 let currencyCode        = col[4]; // Currency
                 let variantGID          = ProductVariantGIDPrefix + variantID;
-                let submitLastBatch    = !rows[index+1]; // To submit last batch
-                // console.log('rows[index+1]', submitLastBatch);
+                let submitLastBatch     = !rows[index+1]; // To submit last batch
 
                 let priceObj = {
                     "compareAtPrice": {
@@ -55,9 +58,9 @@ router.route('/upload')
                 pricesArr.push(priceObj);
                 itemsCounter++;
 
-                // console.log('itemsCounter', itemsCounter);
                 if(itemsCounter == shopifyLimit || submitLastBatch) {
                     console.log(`itemsCounter, shopifyLimit: ${itemsCounter}, ${shopifyLimit}`);
+                    log.info(`itemsCounter, shopifyLimit: ${itemsCounter}, ${shopifyLimit}`);
 
                     let options = {
                         'method': 'POST',
@@ -95,13 +98,17 @@ router.route('/upload')
                         })
                     };
 
-                    console.log('pricesArr.length' ,pricesArr.length);
-                    request(options, function (error, response, body) {
-                        if (error) throw new Error(error);
+                    console.log(`pricesArr.length: ${pricesArr.length}`);
+                    log.info(`pricesArr.length: ${pricesArr.length}`);
 
-                        // responses.push({body})
-                        // console.log(JSON.parse(body));
+                    request(options, function (error, response, body) {
+                        if (error) {
+                            log.error(error);
+                            throw new Error(error);
+                        }
+
                         console.log({body});
+                        log.error({body});
                     });
 
                     pricesArr = [];
@@ -112,12 +119,14 @@ router.route('/upload')
             res.send({
                 code: 200,
                 msg: 'Pricelists Uploaded successfully',
-                // responseData: responses
-
             });
 
         });
-    });
+    } catch (error) {
+        log.error(error);
+    }
+  }// end /upload post
+);
 
 module.exports = router;
 
