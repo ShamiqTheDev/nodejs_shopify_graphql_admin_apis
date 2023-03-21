@@ -17,7 +17,7 @@ const ProductVariantGIDPrefix = process.env.SHOPIFY_PRODUCT_VARIANT_GID_PREFIX;
 const multer = require('multer');
 const upload = multer({ dest: './uploads/PriceLists/' });
 
-// Read uploaded file
+// excel file reader
 const readXlsxFile = require('read-excel-file/node');
 
 router.route('/upload')
@@ -27,6 +27,7 @@ router.route('/upload')
         let priceListID = req.body.price_list_id;
         let priceListGID = PriceListGIDPrefix + priceListID;
 
+        // Read uploaded file
         readXlsxFile(req.file.path).then(async (rows) => {
             rows.shift(); // to remove headings in excel
 
