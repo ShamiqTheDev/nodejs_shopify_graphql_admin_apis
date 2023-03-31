@@ -3,7 +3,7 @@ let request          = require('request');
 
 
 const sleep = async (seconds) => {
-    new Promise((resolve) => setTimeout(resolve, seconds*1000) );
+    return new Promise((resolve) => setTimeout(resolve, seconds*1000) );
 }
 
 const pricelistUpdate = (params) => {
@@ -24,7 +24,7 @@ const pricelistUpdate = (params) => {
         let shopifyLimit = 200;
 
 
-        rows.map((col, index) => {
+        rows.map(async (col, index) => {
             log.info(col);
             // let country         = col[0]; //Country
             let variantID           = col[1]; // Variant Id
@@ -106,7 +106,7 @@ const pricelistUpdate = (params) => {
                 pricesArr = [];
                 itemsCounter = 0;
 
-                sleep(1);// to avoid threshold
+                await sleep(1);// to avoid threshold
             }
         });
 
