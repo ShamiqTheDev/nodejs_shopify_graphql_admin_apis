@@ -1,6 +1,11 @@
 let readXlsxFile     = require('read-excel-file/node');
 let request          = require('request');
 
+
+const sleep = async (seconds) => {
+    new Promise((resolve) => setTimeout(resolve, seconds*1000) );
+}
+
 const pricelistUpdate = (params) => {
 
     let {
@@ -16,9 +21,11 @@ const pricelistUpdate = (params) => {
 
         let pricesArr = [];
         let itemsCounter = 0;
-        let shopifyLimit = 250;
+        let shopifyLimit = 200;
+
 
         rows.map((col, index) => {
+            log.info(col);
             // let country         = col[0]; //Country
             let variantID           = col[1]; // Variant Id
             let price               = col[2]; // Price
@@ -38,6 +45,8 @@ const pricelistUpdate = (params) => {
                 },
                 "variantId": variantGID
             }
+
+            // log.info(priceObj);
 
             pricesArr.push(priceObj);
             itemsCounter++;
@@ -84,7 +93,6 @@ const pricelistUpdate = (params) => {
 
                 console.log(`pricesArr.length: ${pricesArr.length}`);
                 log.info(`pricesArr.length: ${pricesArr.length}`);
-
                 request(options, function (error, response, body) {
                     if (error) {
                         log.error(error);
@@ -97,6 +105,8 @@ const pricelistUpdate = (params) => {
 
                 pricesArr = [];
                 itemsCounter = 0;
+
+                sleep(1);// to avoid threshold
             }
         });
 
